@@ -90,6 +90,7 @@ package {
 			cube.children[0].transform.prependRotation(2, Vector3D.Y_AXIS);
 			cube.children[0].transform.prependRotation(2, Vector3D.Z_AXIS);
 			
+			cube.children[2].transform.prependRotation(2, Vector3D.Z_AXIS);
 			cube.children[2].transform.appendRotation(2, Vector3D.X_AXIS);
 			
 			pipeline.execute(camera, viewport, scene);	
