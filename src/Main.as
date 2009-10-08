@@ -58,40 +58,43 @@ package {
 			cube = new Cube();
 			
 			var cubeChild0 :Cube = new Cube("red");
-			cube.children.push( cubeChild0 );
-			cubeChild0.transform.appendTranslation(200, 0, 0);
+			cube.addChild( cubeChild0 );
+			cubeChild0.x = 200;
 			
 			var cubeChild1 :Cube = new Cube("blue");
-			cube.children.push( cubeChild1 );
-			cubeChild1.transform.appendTranslation(0, 0, 200);
+			cube.addChild( cubeChild1 );
+			cubeChild1.z = 100;
 			
 			var cubeChild2 :Cube = new Cube("green");
-			cube.children.push( cubeChild2 );
-			cubeChild2.transform.appendTranslation(0, 200, 0);
+			cube.addChild( cubeChild2 );
+			cubeChild2.y = 200;
 			
 			scene = new DisplayObject3D("Scene");
-			scene.children.push( camera );
-			scene.children.push( cube );
+			scene.addChild( camera );
+			scene.addChild( cube );
 				
-			camera.transform.appendTranslation(0, 0, 500);
+			camera.z = 1000;
 			
 			render();
 			
 			addEventListener(Event.ENTER_FRAME, render);
 		}
 		
+		private var _r :Number = 0;
+		
 		private function render(event:Event=null):void
 		{
 			// rotation in global frame of reference : append
-			cube.transform.appendRotation(2, Vector3D.Y_AXIS);
+			//cube.x ++;
+			cube.rotationY++;
 			
-			// rotation in local frame of reference :  prepend
-			// change to "append" to see the difference
-			cube.children[0].transform.prependRotation(2, Vector3D.Y_AXIS);
-			cube.children[0].transform.prependRotation(2, Vector3D.Z_AXIS);
+			cube.getChildByName("blue").x += 0.1;
+			//cube.getChildByName("blue").rotationZ--;
+			cube.getChildByName("blue").lookAt( cube.getChildByName("green") );
 			
-			cube.children[2].transform.prependRotation(2, Vector3D.Z_AXIS);
-			cube.children[2].transform.appendRotation(2, Vector3D.X_AXIS);
+			cube.getChildByName("red").rotateAround(_r++, Vector3D.Z_AXIS);
+			
+			camera.lookAt( cube.getChildByName("red") );
 			
 			pipeline.execute(camera, viewport, scene);	
 			
@@ -160,7 +163,7 @@ package {
 				}
 			}
 			
-			for each (child in object.children)
+			for each (child in object._children)
 			{
 				draw(g, child);
 			}

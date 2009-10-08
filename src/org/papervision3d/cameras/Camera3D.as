@@ -4,6 +4,7 @@ package org.papervision3d.cameras
 	import flash.geom.Rectangle;
 	
 	import org.papervision3d.core.math.utils.MatrixUtil;
+	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.objects.DisplayObject3D;
 
 	/**
@@ -11,6 +12,8 @@ package org.papervision3d.cameras
 	 */ 
 	public class Camera3D extends DisplayObject3D
 	{
+		use namespace pv3d;
+		
 		public var projectionMatrix :Matrix3D;
 		public var viewMatrix :Matrix3D;
 		
@@ -42,7 +45,7 @@ package org.papervision3d.cameras
 			_dirty = true;
 			_ortho = false;
 			_orthoScale = 1;
-			
+		
 			viewMatrix = new Matrix3D();
 		}
 		
