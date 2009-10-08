@@ -18,6 +18,8 @@ package {
 	import org.papervision3d.objects.DisplayObject3D;
 	import org.papervision3d.objects.primitives.Cube;
 
+	[SWF (backgroundColor="#000000")]
+	
 	public class Main extends Sprite
 	{
 		use namespace pv3d;
@@ -47,15 +49,26 @@ package {
 			addChild(container);
 			container.x = stage.stageWidth / 2;
 			container.y = stage.stageHeight / 2;
-			container.scaleY = -1;
-			
+
 			addChild(new Stats());
 			
 			viewport = new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
-			camera = new Camera3D(60, 1, 10000, aspect, "Camera01");
+			camera = new Camera3D(50, 1, 10000, aspect, "Camera01");
 			pipeline = new SimplePipeline();
 			cube = new Cube();
-		
+			
+			var cubeChild0 :Cube = new Cube("red");
+			cube.children.push( cubeChild0 );
+			cubeChild0.transform.appendTranslation(200, 0, 0);
+			
+			var cubeChild1 :Cube = new Cube("blue");
+			cube.children.push( cubeChild1 );
+			cubeChild1.transform.appendTranslation(0, 0, 200);
+			
+			var cubeChild2 :Cube = new Cube("green");
+			cube.children.push( cubeChild2 );
+			cubeChild2.transform.appendTranslation(0, 200, 0);
+			
 			scene = new DisplayObject3D("Scene");
 			scene.children.push( camera );
 			scene.children.push( cube );
@@ -69,10 +82,15 @@ package {
 		
 		private function render(event:Event=null):void
 		{
-			//camera.transform.appendTranslation(0, 0, 1);
-			//cube.transform.appendTranslation(0, 0, -1);
-			cube.transform.appendRotation(1, Vector3D.Y_AXIS);
+			// rotation in global frame of reference : append
+			cube.transform.appendRotation(2, Vector3D.Y_AXIS);
 			
+			// rotation in local frame of reference :  prepend
+			// change to "append" to see the difference
+			cube.children[0].transform.prependRotation(2, Vector3D.Y_AXIS);
+			cube.children[0].transform.prependRotation(2, Vector3D.Z_AXIS);
+			
+			cube.children[2].transform.appendRotation(2, Vector3D.X_AXIS);
 			
 			pipeline.execute(camera, viewport, scene);	
 			
@@ -88,6 +106,22 @@ package {
 			var triangle :Triangle;
 			var hw :Number = viewport.width / 2;
 			var hh :Number = viewport.height / 2;
+			var color :uint = 0xffff00;
+			
+			switch(object.name)
+			{
+				case "red":
+					color = 0xff0000;
+					break;
+				case "green":
+					color = 0x00ff00;
+					break;
+				case "blue":
+					color = 0x0000ff;
+					break;
+				default:
+					break;	
+			}
 			
 			if (geometry)
 			{
@@ -110,14 +144,14 @@ package {
 					// so we need to scale up to match the viewport.
 					// @see Camera3D, MatrixUtils and SimplePipeline
 					x0 *= hw;
-					y0 *= hh;
+					y0 *= -hh;
 					x1 *= hw;
-					y1 *= hh;
+					y1 *= -hh;
 					x2 *= hw;
-					y2 *= hh;
+					y2 *= -hh;
 					
 					// Simple draw
-					g.lineStyle(0, 0xff0000);
+					g.lineStyle(0, color);
 					g.moveTo(x0, y0);
 					g.lineTo(x1, y1);
 					g.lineTo(x2, y2);

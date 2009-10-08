@@ -57,8 +57,7 @@ package org.papervision3d.core.render.pipeline
 			
 			if (object is VertexGeometry)
 			{
-				object.viewTransform.append(camera.projectionMatrix);
-				projectVertices(object as VertexGeometry);
+				projectVertices(camera, object as VertexGeometry);
 			}
 			
 			for each (child in object.children)
@@ -67,11 +66,20 @@ package org.papervision3d.core.render.pipeline
 			}
 		}
 		
-		protected function projectVertices(object:VertexGeometry):void
+		protected function projectVertices(camera:Camera3D, object:VertexGeometry):void
 		{
-			Utils3D.projectVectors(object.viewTransform, object.vertexData, object.screenVertexData, object.uvtData);
+			// move the vertices into view / camera space
+			// we'll need the vertices in this space to checjk whether vertices are behind the camera.
+			// if we move to screen space in one go, screen vertices could move to infinity.
+			object.viewTransform.transformVectors(object.vertexData, object.viewVertexData);
 			
-			//trace(object.screenVertexData);
+			// append the projection matrix
+			object.viewTransform.append(camera.projectionMatrix);
+			
+			// move the vertices to screen space.
+			// NOTE: some vertices may have moved to infinity, we need to check while processing triangles.
+			//       IF so we need to check whether we need to clip the triangles or disgard them.
+			Utils3D.projectVectors(object.viewTransform, object.vertexData, object.screenVertexData, object.uvtData);
 		}
 	}
 }
