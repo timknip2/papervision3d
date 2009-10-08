@@ -33,6 +33,8 @@ package org.papervision3d.core.geom.provider
 				triangle.v1 = addVertex(triangle.v1);
 				triangle.v2 = addVertex(triangle.v2);
 				
+				triangles.push(triangle);
+				
 				return triangle;	
 			}
 			else

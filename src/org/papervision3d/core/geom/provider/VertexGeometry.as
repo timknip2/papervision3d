@@ -11,7 +11,8 @@ package org.papervision3d.core.geom.provider
 		
 		pv3d var vertexData :Vector.<Number>;
 		pv3d var screenVertexData :Vector.<Number>;
-
+		pv3d var uvtData :Vector.<Number>;
+		
 		/**
 		 * Constructor
 		 */ 
@@ -23,6 +24,7 @@ package org.papervision3d.core.geom.provider
 			
 			vertexData = new Vector.<Number>();
 			screenVertexData = new Vector.<Number>();
+			uvtData = new Vector.<Number>();
 		}
 		
 		/**
@@ -51,7 +53,7 @@ package org.papervision3d.core.geom.provider
 				vertex.vectorIndexZ = vertexData.push(vertex.z) - 1;
 				vertex.screenIndexX = screenVertexData.push(vertex.x) - 1;
 				vertex.screenIndexY = screenVertexData.push(vertex.y) - 1;
-				
+				uvtData.push(0, 0, 0);
 				vertices.push(vertex);
 				
 				return vertex;
@@ -98,7 +100,8 @@ package org.papervision3d.core.geom.provider
 			
 			vertexData.length = 0;
 			screenVertexData.length = 0;
-
+			uvtData.length = 0;
+			
 			for each (vertex in vertices)
 			{
 				vertex.vectorIndexX = vertexData.push(vertex.x) - 1;
@@ -106,6 +109,7 @@ package org.papervision3d.core.geom.provider
 				vertex.vectorIndexZ = vertexData.push(vertex.z) - 1;
 				vertex.screenIndexX = screenVertexData.push(vertex.x) - 1;
 				vertex.screenIndexY = screenVertexData.push(vertex.y) - 1;
+				uvtData.push(0, 0, 0);
 			}
 		}
 	}
