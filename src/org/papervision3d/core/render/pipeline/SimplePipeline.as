@@ -7,7 +7,6 @@ package org.papervision3d.core.render.pipeline
 	
 	import org.papervision3d.cameras.Camera3D;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
-	import org.papervision3d.core.math.utils.MathUtil;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.objects.DisplayObject3D;
 	
@@ -17,10 +16,20 @@ package org.papervision3d.core.render.pipeline
 		
 		private var _scheduledLookAt :Vector.<DisplayObject3D>;
 		private var _lookAtMatrix :Matrix3D;
+		private var _lookAtFinalMatrix :Matrix3D;
 		private var _lookAtUp :Vector3D;
 		private var _lookAtPos :Vector3D;
 		private var _lookAtAt :Vector3D;
+		private var _lazyLookAt :Boolean;
 		
+		/**
+		 * Whether lookAt's should be executed immediately, or are scheduled for the next render.
+		 * If <code>true</code> we save some cycles, as there's no need to recalculate 
+		 * the object's matrices.
+		 */
+		public function get lazyLookAt():Boolean { return _lazyLookAt; }
+		public function set lazyLookAt(value:Boolean):void { _lazyLookAt = value; }
+		 
 		/**
 		 * 
 		 */ 
@@ -28,9 +37,11 @@ package org.papervision3d.core.render.pipeline
 		{
 			_scheduledLookAt = new Vector.<DisplayObject3D>();
 			_lookAtMatrix = new Matrix3D();
+			_lookAtFinalMatrix = new Matrix3D();
 			_lookAtUp = new Vector3D(0, -1, 0);
 			_lookAtPos = new Vector3D();
 			_lookAtAt = Vector3D.Z_AXIS;
+			_lazyLookAt = false;
 		}
 		
 		/**
@@ -56,33 +67,41 @@ package org.papervision3d.core.render.pipeline
 		{
 			while (_scheduledLookAt.length)
 			{
-				var object :DisplayObject3D = _scheduledLookAt.shift();
+				var object :DisplayObject3D = _scheduledLookAt.pop();
 				var source :Matrix3D = object.worldTransform;
 				var target :Matrix3D = object._lookAtTarget.worldTransform;
 			
 				object._lookAtTarget = null;
 				
-				// perform lookAt
+				// lookat direction vector
 				_lookAtPos.x = source.rawData[12] - target.rawData[12];
 				_lookAtPos.y = source.rawData[13] - target.rawData[13];
 				_lookAtPos.z = source.rawData[14] - target.rawData[14];
 				
-				_lookAtMatrix.pointAt(_lookAtPos, _lookAtAt, (object._lookAtUp?object._lookAtUp:_lookAtUp));
+				// perform lookAt
+				_lookAtMatrix.pointAt(_lookAtPos, _lookAtAt, _lookAtUp);
 				
-				//object.parent.worldTransform.invert();
-				object.transform.rawData  = object.parent.worldTransform.rawData;
-				object.transform.invert();
-				object.transform.prepend(_lookAtMatrix);
+				_lookAtFinalMatrix.rawData = object.parent.worldTransform.rawData;
+				_lookAtFinalMatrix.invert();
+				_lookAtFinalMatrix.prepend(_lookAtMatrix);
 
 				//We need to update the do3d's rotations
-				var components : Vector.<Vector3D> = object.transform.decompose();
-				var rotation : Vector3D = components[1];
-								
-				object.rotationX = rotation.x * MathUtil.TO_DEGREES;
-				object.rotationY = rotation.y * MathUtil.TO_DEGREES;
-				object.rotationZ = rotation.z * MathUtil.TO_DEGREES;
+				var components : Vector.<Vector3D> = _lookAtFinalMatrix.decompose();
+				var rotation :Vector3D = components[1];
 				
-				transformToWorld(object, object.parent as DisplayObject3D, false);
+				object._rotation.x = rotation.x;
+				object._rotation.y = rotation.y;
+				object._rotation.z = rotation.z;
+				object._dirty = true;
+				
+				if (_lazyLookAt)
+				{	
+				}
+				else
+				{
+					// re-transform the object and its children
+					transformToWorld(object, object.parent as DisplayObject3D, false);
+				}
 			}
 		}
 		

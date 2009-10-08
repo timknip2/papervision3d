@@ -63,7 +63,7 @@ package {
 			
 			var cubeChild1 :Cube = new Cube("blue");
 			cube.addChild( cubeChild1 );
-			cubeChild1.z = 100;
+			cubeChild1.z = 200;
 			
 			var cubeChild2 :Cube = new Cube("green");
 			cube.addChild( cubeChild2 );
@@ -88,13 +88,14 @@ package {
 			//cube.x ++;
 			cube.rotationY++;
 			
-			cube.getChildByName("blue").x += 0.1;
+			//cube.getChildByName("blue").x += 0.1;
 			//cube.getChildByName("blue").rotationZ--;
 			cube.getChildByName("blue").lookAt( cube.getChildByName("green") );
 			
 			cube.getChildByName("red").rotateAround(_r++, Vector3D.Z_AXIS);
+			cube.getChildByName("green").rotateAround(_r++, Vector3D.X_AXIS);
 			
-			camera.lookAt( cube.getChildByName("red") );
+			camera.lookAt( cube.getChildByName("green") );
 			
 			pipeline.execute(camera, viewport, scene);	
 			
