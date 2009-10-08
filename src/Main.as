@@ -47,6 +47,7 @@ package {
 			addChild(container);
 			container.x = stage.stageWidth / 2;
 			container.y = stage.stageHeight / 2;
+			container.scaleY = -1;
 			
 			addChild(new Stats());
 			
@@ -69,8 +70,9 @@ package {
 		private function render(event:Event=null):void
 		{
 			//camera.transform.appendTranslation(0, 0, 1);
+			//cube.transform.appendTranslation(0, 0, -1);
 			cube.transform.appendRotation(1, Vector3D.Y_AXIS);
-			cube.transform.appendTranslation(0, 1, 0);
+			
 			
 			pipeline.execute(camera, viewport, scene);	
 			
@@ -98,12 +100,15 @@ package {
 					var x2 :Number = geometry.screenVertexData[triangle.v2.screenIndexX];
 					var y2 :Number = geometry.screenVertexData[triangle.v2.screenIndexY];
 					
-					//Backface culling.
+					// Simple backface culling.
 					if ((x2 - x0) * (y1 - y0) - (y2 - y0) * (x1 - x0) > 0)
 					{
 						continue;
 					}
 					
+					// Our projection matrix moves vertices into the range [-1,-1,-1] to [1,1,1]
+					// so we need to scale up to match the viewport.
+					// @see Camera3D, MatrixUtils and SimplePipeline
 					x0 *= hw;
 					y0 *= hh;
 					x1 *= hw;
@@ -111,6 +116,7 @@ package {
 					x2 *= hw;
 					y2 *= hh;
 					
+					// Simple draw
 					g.lineStyle(0, 0xff0000);
 					g.moveTo(x0, y0);
 					g.lineTo(x1, y1);
