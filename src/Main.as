@@ -4,6 +4,7 @@ package {
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.geom.Matrix3D;
 	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
 	
@@ -13,6 +14,7 @@ package {
 	import org.papervision3d.core.geom.Triangle;
 	import org.papervision3d.core.geom.provider.TriangleGeometry;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
+	import org.papervision3d.core.math.Quaternion;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.core.render.clipping.SutherlandHodgmanClipper;
 	import org.papervision3d.core.render.data.RenderData;
@@ -59,22 +61,25 @@ package {
 
 			addChild(new Stats());
 
-			camera = new Camera3D(50, 140, 1500, aspect, "Camera01");
+			camera = new Camera3D(50, 10, 15000, aspect, "Camera01");
 			pipeline = new BasicPipeline();
 			
 			cube = new Cube("Cube");
 			
 			var cubeChild0 :Cube = new Cube("red");
 			cube.addChild( cubeChild0 );
-			cubeChild0.x = 200;
+			cubeChild0.x = 300;
+			//cubeChild0.z = -500;
 			
 			var cubeChild1 :Cube = new Cube("blue");
 			cube.addChild( cubeChild1 );
 			cubeChild1.z = 200;
+
 			
 			var cubeChild2 :Cube = new Cube("green");
 			cube.addChild( cubeChild2 );
 			cubeChild2.y = 200;
+			cubeChild2.z = 10;
 			
 			scene = new DisplayObject3D("Scene");
 			scene.addChild( camera );
@@ -104,14 +109,18 @@ package {
 		private function render(event:Event=null):void
 		{
 			// rotation in global frame of reference : append
-			//cube.x ++;
-			//cube.rotationY++;
+		//	cube.x ++;
+		//	cube.rotationY++;
 			
 			//cube.getChildByName("blue").x += 0.1;
 			//cube.getChildByName("blue").rotationZ--;
-			cube.getChildByName("blue").lookAt( cube.getChildByName("red") );
+			//cube.getChildByName("blue").lookAt( cube.getChildByName("red") );
 			
-			cube.getChildByName("red").rotateAround(_s--, Vector3D.Z_AXIS);
+			cube.getChildByName("green").transform.lookAt( cube.getChildByName("red").transform );
+			
+			cube.getChildByName("red").rotateAround(_s++, new Vector3D(0, 0, _s));
+		//	cube.getChildByName("red").scaleX = 2;
+			cube.getChildByName("red").rotationX += 3;
 		//	cube.getChildByName("green").rotateAround(_r++, Vector3D.X_AXIS);
 			
 			camera.x = Math.sin(_r) * 1000;
@@ -119,7 +128,8 @@ package {
 			camera.z = Math.cos(_r) * 1000;
 			_r += Math.PI / 180;
 			
-			camera.lookAt( cube.getChildByName("green") );
+			camera.transform.lookAt( cube.getChildByName("blue").transform );
+			//trace(cube.getChildByName("red").transform.position);
 			
 			renderer.renderScene(renderData);	
 			
@@ -156,7 +166,7 @@ package {
 			
 			if (geometry)
 			{
-				trace("name: " + object.name);
+			//	trace("name: " + object.name);
 				
 				for each (var drawable :TriangleDrawable in renderer.renderList.drawables)
 				{

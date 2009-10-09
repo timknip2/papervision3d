@@ -7,6 +7,8 @@ package org.papervision3d.core.render.pipeline
 	
 	import org.papervision3d.cameras.Camera3D;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
+	import org.papervision3d.core.math.Quaternion;
+	import org.papervision3d.core.math.utils.MathUtil;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.core.render.data.RenderData;
 	import org.papervision3d.objects.DisplayObject3D;
@@ -42,7 +44,7 @@ package org.papervision3d.core.render.pipeline
 			_lookAtUp = new Vector3D(0, -1, 0);
 			_lookAtPos = new Vector3D();
 			_lookAtAt = Vector3D.Z_AXIS;
-			_lazyLookAt = false;
+			_lazyLookAt = true;
 		}
 		
 		/**
@@ -74,30 +76,58 @@ package org.papervision3d.core.render.pipeline
 			{
 				var object :DisplayObject3D = _scheduledLookAt.pop();
 				var source :Matrix3D = object.worldTransform;
-				var target :Matrix3D = object._lookAtTarget.worldTransform;
+				//var target :Matrix3D = object._lookAtTarget.worldTransform;
 			
-				object._lookAtTarget = null;
+				if (object.transform._lookAt)
+				{
+					object.worldTransform.prepend(object.transform._lookAt);
+				}
+				//object._lookAtTarget = null;
+			///	trace("lookAt: " + object.name);
 				
+				continue;
+					
 				// lookat direction vector
-				_lookAtPos.x = source.rawData[12] - target.rawData[12];
-				_lookAtPos.y = source.rawData[13] - target.rawData[13];
-				_lookAtPos.z = source.rawData[14] - target.rawData[14];
+				_lookAtPos.x = target.rawData[12] - source.rawData[12];
+				_lookAtPos.y = target.rawData[13] - source.rawData[13];
+				_lookAtPos.z = target.rawData[14] - source.rawData[14];
+				_lookAtPos.normalize();
 				
+				/*
 				// perform lookAt
 				_lookAtMatrix.pointAt(_lookAtPos, _lookAtAt, _lookAtUp);
 				
 				_lookAtFinalMatrix.rawData = object.parent.worldTransform.rawData;
 				_lookAtFinalMatrix.invert();
+					_lookAtFinalMatrix.prepend(_lookAtMatrix);
+*/
+				
+				var s :Vector3D = _lookAtPos.crossProduct(new Vector3D(0,1,0));
+				var u :Vector3D = s.crossProduct(_lookAtPos);
+				var v :Vector.<Number> = _lookAtFinalMatrix.rawData;
+				
+				v[0] = s.x;	v[1] = s.y; v[2] = s.z;
+				v[4] = u.x;	v[5] = u.y; v[6] = u.z;
+				v[8] = -_lookAtPos.x;	v[9] = -_lookAtPos.y; v[10] = -_lookAtPos.z;
+				 
+				_lookAtFinalMatrix.rawData = v;
+				
+				_lookAtMatrix.rawData = object.worldTransform.rawData;
+				_lookAtMatrix.invert();
 				_lookAtFinalMatrix.prepend(_lookAtMatrix);
-
+				
 				//We need to update the do3d's rotations
 				var components : Vector.<Vector3D> = _lookAtFinalMatrix.decompose();
 				var rotation :Vector3D = components[1];
 				
-				object._rotation.x = rotation.x;
-				object._rotation.y = rotation.y;
-				object._rotation.z = rotation.z;
-				object._dirty = true;
+				rotation.x *= MathUtil.TO_DEGREES;
+				rotation.y *= MathUtil.TO_DEGREES;
+				rotation.z *= MathUtil.TO_DEGREES;
+				//object.transform.rotate(rotation, false);
+				//object.transform.rotation = Quaternion.createFromMatrix(_lookAtFinalMatrix);
+				object.transform.localEulerAngles = rotation;
+
+				object.transform.dirty = true;
 				
 				if (_lazyLookAt)
 				{	
@@ -114,19 +144,20 @@ package org.papervision3d.core.render.pipeline
 		{
 			var child :DisplayObject3D;
 			
-			if (processLookAt && object._lookAtTarget )
+			if (processLookAt && object.transform._lookAt )
 			{
 				_scheduledLookAt.push( object );
 			}
-			
-			object.updateTransform();
-			object.worldTransform.rawData = object.transform.rawData;
+
+			object.worldTransform.rawData = object.transform.localToWorldMatrix.rawData;
 		
 			if (parent)
 			{
 				object.worldTransform.append(parent.worldTransform);	
 			}
 	
+			object.transform.position = object.worldTransform.transformVector(object.transform.localPosition);
+		
 			for each (child in object._children)
 			{
 				transformToWorld(child, object, processLookAt);

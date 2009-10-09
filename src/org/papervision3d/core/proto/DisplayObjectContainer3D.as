@@ -15,9 +15,6 @@ package org.papervision3d.core.proto
 		public var name :String;
 		
 		/** */
-		public var transform :Matrix3D;
-		
-		/** */
 		public var worldTransform :Matrix3D;
 		
 		/** */
@@ -27,22 +24,10 @@ package org.papervision3d.core.proto
 		public var screenTransform :Matrix3D;
 		
 		/** */
+		public var transform :Transform3D;
+		
+		/** */
 		pv3d var _children :Vector.<DisplayObject3D>;
-		
-		/** */
-		pv3d var _translation :Vector3D;
-		
-		/** */
-		pv3d var _rotation :Vector3D;
-		
-		/** */
-		pv3d var _scale :Vector3D;
-		
-		/** */
-		pv3d var _transformComponents :Vector.<Vector3D>;
-		 
-		/** */
-		pv3d var _dirty :Boolean;
 		
 		/** */
 		pv3d var _lookAtUp :Vector3D;
@@ -60,21 +45,10 @@ package org.papervision3d.core.proto
 		{
 			this.name = name || "Object" + (_newID++);
 			
-			this.transform = new Matrix3D();
+			this.transform = new Transform3D();
 			this.worldTransform = new Matrix3D();
 			this.viewTransform = new Matrix3D();
 			this.screenTransform = new Matrix3D();
-			
-			_translation = new Vector3D();
-			_rotation = new Vector3D();
-			_scale = new Vector3D(1, 1, 1);
-			
-			_transformComponents = new Vector.<Vector3D>(3, true);
-			_transformComponents[0] = _translation;
-			_transformComponents[1] = _rotation;
-			_transformComponents[2] = _scale;
-			
-			_dirty = true;
 			
 			_children = new Vector.<DisplayObject3D>();
 		}
@@ -93,6 +67,7 @@ package org.papervision3d.core.proto
 			}
 			
 			child.parent = this;
+			child.transform.parent = this.transform;
 			
 			_children.push(child);
 			
@@ -247,116 +222,31 @@ package org.papervision3d.core.proto
 			
 			if (pivot === this.parent)
 			{
-				pivotPoint = this.parent._translation;
+				pivotPoint = this.parent.transform.localPosition;
 			}
 			else if (pivot is Vector3D)
 			{
 				pivotPoint = pivot as Vector3D;	
 			}
-			
-			_globalRotation.identity();
-			
+
 			if (pivotPoint)
 			{
-				_globalRotation.prependRotation(degrees, axis, pivotPoint);
-				_dirty = true;
+				transform.rotate(axis, false);
 			}
 		}
 		
-		private var _globalRotation :Matrix3D = new Matrix3D();
-		
-		/**
-		 * Updates the local transform.
-		 * 
-		 * @return	Boolean indicating success.
-		 */ 
-		public function updateTransform():Boolean
-		{
-			var result :Boolean = true;
-			if (_dirty)
-			{
-				result = transform.recompose( _transformComponents );
-				
-				if (_globalRotation )
-				{
-					transform.append(_globalRotation);
-				}
-				
-				_dirty = false;
-			}
-			return result;
-		}
-		
-		/**
-		 * 
-		 */
-		public function get dirty():Boolean
-		{
-			return _dirty;
-		} 
-		
-		public function set dirty(value:Boolean):void
-		{
-			_dirty = value;	
-		}
-		
-		/**
-		 * 
-		 */
-		public function get rotation():Vector3D
-		{
-			return _rotation;
-		} 
-		
-		public function set rotation(value:Vector3D):void
-		{
-			_rotation = value;
-			_transformComponents[1] = _rotation;
-			_dirty = true;
-		}
-		
-		/**
-		 * 
-		 */
-		public function get scale():Vector3D
-		{
-			return _scale;
-		} 
-		
-		public function set scale(value:Vector3D):void
-		{
-			_scale = value;
-			_transformComponents[2] = _scale;
-			_dirty = true;
-		}
-		
-		/**
-		 * 
-		 */
-		public function get translation():Vector3D
-		{
-			return _translation;
-		} 
-		
-		public function set translation(value:Vector3D):void
-		{
-			_translation = value;
-			_transformComponents[0] = _translation;
-			_dirty = true;
-		}
-
 		/**
 		 * 
 		 */ 
 		public function get x():Number
 		{
-			return _translation.x;
+			return transform.localPosition.x;
 		}
 		
 		public function set x(value:Number):void
 		{
-			_translation.x = value;
-			_dirty = true;
+			transform.localPosition.x = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -364,13 +254,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get y():Number
 		{
-			return _translation.y;
+			return transform.localPosition.y;
 		}
 		
 		public function set y(value:Number):void
 		{
-			_translation.y = value;
-			_dirty = true;
+			transform.localPosition.y = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -378,27 +268,27 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get z():Number
 		{
-			return _translation.z;
+			return transform.localPosition.z;
 		}
 		
 		public function set z(value:Number):void
 		{
-			_translation.z = value;
-			_dirty = true;
+			transform.localPosition.z = value;
+			transform.dirty = true;
 		}
-				
+	
 		/**
 		 * 
 		 */ 
 		public function get rotationX():Number
 		{
-			return _rotation.x * MathUtil.TO_DEGREES;
+			return transform.localEulerAngles.x;
 		}
 		
 		public function set rotationX(value:Number):void
 		{
-			_rotation.x = value * MathUtil.TO_RADIANS;
-			_dirty = true;
+			transform.localEulerAngles.x = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -406,13 +296,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get rotationY():Number
 		{
-			return _rotation.y * MathUtil.TO_DEGREES;
+			return transform.localEulerAngles.y;
 		}
 		
 		public function set rotationY(value:Number):void
 		{
-			_rotation.y = value * MathUtil.TO_RADIANS;
-			_dirty = true;
+			transform.localEulerAngles.y = value
+			transform.dirty = true;
 		}
 		
 		/**
@@ -420,13 +310,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get rotationZ():Number
 		{
-			return _rotation.z * MathUtil.TO_DEGREES;
+			return transform.localEulerAngles.z;
 		}
 		
 		public function set rotationZ(value:Number):void
 		{
-			_rotation.z = value * MathUtil.TO_RADIANS;
-			_dirty = true;
+			transform.localEulerAngles.z = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -434,13 +324,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get scaleX():Number
 		{
-			return _scale.x;
+			return transform.localScale.x;
 		}
 		
 		public function set scaleX(value:Number):void
 		{
-			_scale.x = value;
-			_dirty = true;
+			transform.localScale.x = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -448,13 +338,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get scaleY():Number
 		{
-			return _scale.y;
+			return transform.localScale.y;
 		}
 		
 		public function set scaleY(value:Number):void
 		{
-			_scale.y = value;
-			_dirty = true;
+			transform.localScale.y = value;
+			transform.dirty = true;
 		}
 		
 		/**
@@ -462,13 +352,13 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get scaleZ():Number
 		{
-			return _scale.z;
+			return transform.localScale.z;
 		}
 		
 		public function set scaleZ(value:Number):void
 		{
-			_scale.z = value;
-			_dirty = true;
+			transform.localScale.z = value;
+			transform.dirty = true;
 		}
 	}
 }

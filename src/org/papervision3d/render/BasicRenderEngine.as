@@ -97,7 +97,7 @@ package org.papervision3d.render
 					if (flags == 7 )
 					{
 						// behind near plane
-						continue;
+						//continue;
 					}
 					else if (flags)
 					{
@@ -113,7 +113,7 @@ package org.papervision3d.render
 					if (flags == 7 )
 					{
 						// behind far plane
-						continue;
+						//continue;
 					}
 					else if (flags)
 					{
@@ -121,7 +121,7 @@ package org.papervision3d.render
 						triangle.clipFlags |= ClipFlags.FAR;
 					}
 					
-					triangle.visible = (triangle.clipFlags == 0);
+					triangle.visible = true;// (triangle.clipFlags == 0);
 					
 					if (triangle.visible)
 					{	
