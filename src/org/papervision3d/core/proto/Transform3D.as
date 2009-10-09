@@ -197,8 +197,6 @@ package org.papervision3d.core.proto
 				rotate( _localEulerAngles, true );
 				
 				_transform.rawData = _localRotation.matrix.rawData;
-			
-				
 				_transform.appendTranslation( _localPosition.x, _localPosition.y, _localPosition.z);
 	
 				rotate( _eulerAngles, false );
@@ -208,22 +206,6 @@ package org.papervision3d.core.proto
 				_dirty = false;
 
 			}		
-
-			if (_lookAt)
-			{
-				//_transform = _lookAt.clone();
-				//_transform.appendTranslation(0, 300, 0);
-				//_transform.appendTranslation( -_position.x, -_position.y, -_position.z);
-			//	_transform.invert();
-			//	_transform.prepend(_lookAt);
-			}
-			
-			if (parent)
-			{
-			//	var mat :Matrix3D = parent.localToWorldMatrix.clone();
-			//	mat.append(_transform);
-			//	_position = mat.transformVector(_localPosition);
-			}	
 			
 			return _transform;
 		}
