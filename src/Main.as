@@ -119,8 +119,8 @@ package {
 			var child :DisplayObject3D;
 			var geometry :TriangleGeometry = object as TriangleGeometry;
 			var triangle :Triangle;
-			var hw :Number = viewport.width / 2;
-			var hh :Number = viewport.height / 2;
+			var hw :Number = renderData.viewport.viewportWidth / 2;
+			var hh :Number = renderData.viewport.viewportHeight / 2;
 			var color :uint = 0xffff00;
 			
 			switch(object.name)
