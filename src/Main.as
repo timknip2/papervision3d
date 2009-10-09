@@ -14,9 +14,11 @@ package {
 	import org.papervision3d.core.geom.provider.TriangleGeometry;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
 	import org.papervision3d.core.ns.pv3d;
-	import org.papervision3d.core.render.pipeline.SimplePipeline;
+	import org.papervision3d.core.render.data.RenderData;
+	import org.papervision3d.core.render.pipeline.BasicPipeline;
 	import org.papervision3d.objects.DisplayObject3D;
 	import org.papervision3d.objects.primitives.Cube;
+	import org.papervision3d.view.Viewport3D;
 
 	[SWF (backgroundColor="#000000")]
 	
@@ -28,9 +30,10 @@ package {
 		public var vertexGeometry :VertexGeometry;
 		public var cube :Cube;
 		public var camera :Camera3D;
-		public var pipeline :SimplePipeline;
+		public var pipeline :BasicPipeline;
 		public var viewport :Rectangle;
 		public var scene :DisplayObject3D;
+		public var renderData :RenderData;
 		
 		public function Main()
 		{
@@ -51,10 +54,10 @@ package {
 			container.y = stage.stageHeight / 2;
 
 			addChild(new Stats());
-			
-			viewport = new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
+
 			camera = new Camera3D(50, 1, 10000, aspect, "Camera01");
-			pipeline = new SimplePipeline();
+			pipeline = new BasicPipeline();
+			
 			cube = new Cube();
 			
 			var cubeChild0 :Cube = new Cube("red");
@@ -74,6 +77,13 @@ package {
 			scene.addChild( cube );
 				
 			camera.z = 1000;
+			
+			renderData = new RenderData();
+			renderData.camera = camera;
+			renderData.scene = scene;
+			renderData.viewport = new Viewport3D(0, 0, true);
+			
+			addChild(renderData.viewport);
 			
 			render();
 			
@@ -97,11 +107,11 @@ package {
 			
 			camera.lookAt( cube.getChildByName("green") );
 			
-			pipeline.execute(camera, viewport, scene);	
+			pipeline.execute(renderData);	
 			
-			container.graphics.clear();	
+			renderData.viewport.containerSprite.graphics.clear();	
 			
-			draw(container.graphics, scene);
+			draw(renderData.viewport.containerSprite.graphics, scene);
 		}
 		
 		private function draw(g:Graphics, object:DisplayObject3D):void
