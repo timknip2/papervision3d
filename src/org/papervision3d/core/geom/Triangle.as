@@ -2,8 +2,13 @@ package org.papervision3d.core.geom
 {
 	import flash.geom.Vector3D;
 	
+	import org.papervision3d.core.ns.pv3d;
+	import org.papervision3d.core.render.draw.items.IDrawable;
+	
 	public class Triangle
 	{
+		use namespace pv3d;
+		
 		/** */
 		public var v0 :Vertex;
 		
@@ -25,6 +30,15 @@ package org.papervision3d.core.geom
 		/** */
 		public var uv2 :UVCoord;
 		
+		/** */
+		public var visible :Boolean;
+		
+		/** */
+		pv3d var clipFlags :int;
+		
+		/** */
+		pv3d var drawable :IDrawable;
+		
 		/**
 		 * Constructor
 		 * 
@@ -40,6 +54,7 @@ package org.papervision3d.core.geom
 			this.uv0 = uv0 || new UVCoord();
 			this.uv1 = uv1 || new UVCoord();
 			this.uv2 = uv2 || new UVCoord();
+			this.visible = true;
 		}
 	}
 }

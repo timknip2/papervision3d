@@ -1,6 +1,7 @@
 package org.papervision3d.core.render.pipeline
 {
 	import flash.geom.Matrix3D;
+	import flash.geom.Rectangle;
 	import flash.geom.Utils3D;
 	import flash.geom.Vector3D;
 	
@@ -49,18 +50,22 @@ package org.papervision3d.core.render.pipeline
 		 */ 
 		public function execute(renderData:RenderData):void
 		{
+			var scene :DisplayObject3D = renderData.scene;
+			var camera :Camera3D = renderData.camera;
+			var rect :Rectangle = renderData.viewport.sizeRectangle;
+			
 			_scheduledLookAt.length = 0;
 			
-			transformToWorld(renderData.scene);	
+			transformToWorld(scene);	
 			
 			if (_scheduledLookAt.length)
 			{
 				handleLookAt();
 			}
 			
-			renderData.camera.update(renderData.viewport.sizeRectangle);
+			camera.update(rect);
 			
-			transformToView(renderData.camera, renderData.scene);
+			transformToView(camera, scene);
 		}
 		
 		protected function handleLookAt():void
@@ -154,12 +159,13 @@ package org.papervision3d.core.render.pipeline
 			object.viewTransform.transformVectors(object.vertexData, object.viewVertexData);
 			
 			// append the projection matrix
-			object.viewTransform.append(camera.projectionMatrix);
+			object.screenTransform.rawData = object.viewTransform.rawData;
+			object.screenTransform.append(camera.projectionMatrix);
 			
 			// move the vertices to screen space.
 			// NOTE: some vertices may have moved to infinity, we need to check while processing triangles.
 			//       IF so we need to check whether we need to clip the triangles or disgard them.
-			Utils3D.projectVectors(object.viewTransform, object.vertexData, object.screenVertexData, object.uvtData);
+			Utils3D.projectVectors(object.screenTransform, object.vertexData, object.screenVertexData, object.uvtData);
 		}
 	}
 }

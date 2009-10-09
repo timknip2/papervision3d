@@ -6,6 +6,7 @@ package org.papervision3d.cameras
 	import org.papervision3d.core.math.utils.MatrixUtil;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.objects.DisplayObject3D;
+	import org.papervision3d.objects.Frustum3D;
 
 	/**
 	 * 
@@ -24,6 +25,7 @@ package org.papervision3d.cameras
 		private var _near:Number;
 		private var _ortho:Boolean;
 		private var _orthoScale:Number;
+		pv3d var _frustum :Frustum3D;
 		
 		/**
 		 * Constructor.
@@ -45,30 +47,71 @@ package org.papervision3d.cameras
 			_dirty = true;
 			_ortho = false;
 			_orthoScale = 1;
-		
+			_frustum = new Frustum3D("Frustum3D_For_" + name);
+			
+			addChild(_frustum);
+			
 			viewMatrix = new Matrix3D();
 		}
 		
 		/**
 		 * 
 		 */
-		public function update(viewport:Rectangle) : void {
+		public function update(viewport:Rectangle) : void 
+		{
 			viewMatrix.rawData = worldTransform.rawData;
 			viewMatrix.invert();
-
-			_aspectRatio = viewport.width / viewport.height;
 			
-			if(_dirty) {
+			
+			
+			if(_dirty) 
+			{
 				_dirty = false;
 				
-				if(_ortho) {
+				if(_ortho) 
+				{
 					projectionMatrix = MatrixUtil.createOrthoMatrix(viewport.width, -viewport.width, -viewport.height, viewport.height, -_far, _far);
-				} else {
+				} 
+				else 
+				{
+					_aspectRatio = viewport.width / viewport.height;
 					projectionMatrix = MatrixUtil.createProjectionMatrix(_fov, _aspectRatio, _near, _far);
 				}
-
-				//frustum.extractPlanes(projectionMatrix, viewport, frustum.viewPlanes, true, true);
 			}
+			
+			_frustum.update(this);
 		}
+		
+		/**
+		 * 
+		 */
+		public function get aspectRatio():Number
+		{
+			return _aspectRatio;
+		}
+		
+		/**
+		 * 
+		 */
+		public function get far():Number
+		{
+			return _far;
+		}
+		
+		/**
+		 * 
+		 */
+		public function get fov():Number
+		{
+			return _fov;
+		}
+		
+		/**
+		 * 
+		 */
+		public function get near():Number
+		{
+			return _near;
+		} 
 	}
 }

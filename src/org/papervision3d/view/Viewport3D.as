@@ -4,6 +4,8 @@ package org.papervision3d.view
 	import flash.events.Event;
 	import flash.geom.Rectangle;
 	
+	import org.papervision3d.core.math.Plane3D;
+	
 	/**
 	 * 
 	 */ 

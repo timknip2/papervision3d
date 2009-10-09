@@ -24,6 +24,9 @@ package org.papervision3d.core.proto
 		public var viewTransform :Matrix3D;
 		
 		/** */
+		public var screenTransform :Matrix3D;
+		
+		/** */
 		pv3d var _children :Vector.<DisplayObject3D>;
 		
 		/** */
@@ -60,6 +63,7 @@ package org.papervision3d.core.proto
 			this.transform = new Matrix3D();
 			this.worldTransform = new Matrix3D();
 			this.viewTransform = new Matrix3D();
+			this.screenTransform = new Matrix3D();
 			
 			_translation = new Vector3D();
 			_rotation = new Vector3D();
