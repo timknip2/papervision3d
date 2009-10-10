@@ -61,7 +61,7 @@ package {
 
 			addChild(new Stats());
 
-			camera = new Camera3D(60, 400, 2300, aspect, "Camera01");
+			camera = new Camera3D(20, 400, 2300, aspect, "Camera01");
 			pipeline = new BasicPipeline();
 			
 			cube = new Cube("Cube");
@@ -208,12 +208,12 @@ package {
 					color = drawable.material < 0 ? 0xff0000 : colors[drawable.material];
 					// Simple draw
 					g.lineStyle(0, color);
-					g.beginFill(color, 0.5);
+				//	g.beginFill(color, 0.5);
 					g.moveTo(x0, y0);
 					g.lineTo(x1, y1);
 					g.lineTo(x2, y2);
 					g.lineTo(x0, y0);
-					g.endFill();
+				//	g.endFill();
 				}
 			}
 			
