@@ -59,10 +59,8 @@ package org.papervision3d.cameras
 		 */
 		public function update(viewport:Rectangle) : void 
 		{
-			viewMatrix.rawData = worldTransform.rawData;
+			viewMatrix.rawData = transform.worldTransform.rawData;
 			viewMatrix.invert();
-			
-			
 			
 			if(_dirty) 
 			{
@@ -79,7 +77,7 @@ package org.papervision3d.cameras
 				}
 			}
 			
-			_frustum.update(this);
+			//_frustum.update(this);
 		}
 		
 		/**

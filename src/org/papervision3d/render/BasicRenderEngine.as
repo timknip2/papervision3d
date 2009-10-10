@@ -43,7 +43,10 @@ package org.papervision3d.render
 		{
 			var scene :DisplayObject3D = renderData.scene;
 			var camera :Camera3D = renderData.camera;
-			
+
+			camera.rotationX = camera.rotationX;
+			camera.update(renderData.viewport.sizeRectangle);
+						
 			pipeline.execute(renderData);
  
  			renderList.clear();
@@ -65,9 +68,6 @@ package org.papervision3d.render
 			
 			if (object is TriangleGeometry)
 			{
-				var frustum :Frustum3D = camera._frustum;
-				var near :Plane3D = frustum.worldPlanes[0];
-				var far :Plane3D = frustum.worldPlanes[1];
 				var geom :TriangleGeometry = object as TriangleGeometry;
 				var triangle :Triangle;
 				var inside :Boolean;
@@ -90,14 +90,14 @@ package org.papervision3d.render
 					v2.z = geom.viewVertexData[ triangle.v2.vectorIndexZ ];
 					
 					flags = 0;
-					if (near.distance(v0) < 0) flags |= 1;
-					if (near.distance(v1) < 0) flags |= 2;
-					if (near.distance(v2) < 0) flags |= 4;
+					if (v0.z >= -camera.near) flags |= 1;
+					if (v1.z >= -camera.near) flags |= 2;
+					if (v2.z >= -camera.near) flags |= 4;
 
 					if (flags == 7 )
 					{
 						// behind near plane
-						//continue;
+						continue;
 					}
 					else if (flags)
 					{
@@ -106,14 +106,14 @@ package org.papervision3d.render
 					}
 					
 					flags = 0;
-					if (far.distance(v0) < 0) flags |= 1;
-					if (far.distance(v1) < 0) flags |= 2;
-					if (far.distance(v2) < 0) flags |= 4;
+					if (v0.z <= -camera.far) flags |= 1;
+					if (v1.z <= -camera.far) flags |= 2;
+					if (v2.z <= -camera.far) flags |= 4;
 					
 					if (flags == 7 )
 					{
 						// behind far plane
-						//continue;
+						continue;
 					}
 					else if (flags)
 					{
@@ -121,7 +121,7 @@ package org.papervision3d.render
 						triangle.clipFlags |= ClipFlags.FAR;
 					}
 					
-					triangle.visible = true;// (triangle.clipFlags == 0);
+					triangle.visible = (triangle.clipFlags == 0);
 					
 					if (triangle.visible)
 					{	

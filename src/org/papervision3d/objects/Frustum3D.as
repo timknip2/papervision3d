@@ -41,7 +41,10 @@ package org.papervision3d.objects
 		 */ 
 		public function update(camera:Camera3D):void
 		{
-			var v :Vector.<Number> = this.viewTransform.rawData;
+			//this.transform.worldTransform.rawData = camera.transform.viewTransform.rawData;
+			//this.transform.worldTransform.invert();
+			
+			var v :Vector.<Number> = camera.transform.viewTransform.rawData;
 			
 			_xAxis.x = v[0];
 			_xAxis.y = v[1];
@@ -59,11 +62,18 @@ package org.papervision3d.objects
 			
 			var zNeg :Vector3D = _zAxis.clone();
 			zNeg.negate();
+		
+			_MP.rawData = camera.transform.worldTransform.rawData;
 			
-			_MP.rawData = this.viewTransform.rawData;
-			_MP.append(camera.projectionMatrix);
+		//	_MP.prepend(camera.projectionMatrix);
+			//_MP.invert();
 			
-			extractPlanes(_MP, this.worldPlanes);
+			//this.worldPlanes[0].normalize();
+			
+			Plane3D(this.worldPlanes[0]).setNormalAndPoint(_zAxis, new Vector3D());
+			
+			//trace(this.worldPlanes[0]);
+			//extractPlanes(_MP, this.worldPlanes);
 		}
 		
 		/**

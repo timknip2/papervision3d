@@ -5,11 +5,35 @@ package org.papervision3d.core.proto
 	
 	import org.papervision3d.core.math.Quaternion;
 	import org.papervision3d.core.math.utils.MathUtil;
+	import org.papervision3d.core.ns.pv3d;
 	
+	/**
+	 * Transform3D.
+	 * <p></p>
+	 * 
+	 * @author Tim Knip / floorplanner.com
+	 */ 
 	public class Transform3D
 	{
+		use namespace pv3d;
+		
 		/** */
 		public static var DEFAULT_LOOKAT_UP :Vector3D = new Vector3D(0, -1, 0);
+		
+		/** */
+		public var worldTransform :Matrix3D;
+		
+		/** */
+		public var viewTransform :Matrix3D;
+		
+		/** */
+		public var screenTransform :Matrix3D;
+		
+		/** */
+		pv3d var scheduledLookAt :Transform3D;
+		
+		/** */
+		pv3d var scheduledLookAtUp :Vector3D;
 		
 		/** */
 		private var _parent :Transform3D;
@@ -66,49 +90,28 @@ package org.papervision3d.core.proto
 			_localScale = new Vector3D(1, 1, 1);
 			_transform = new Matrix3D();
 			_localTransform = new Matrix3D();
+			
+			this.worldTransform = new Matrix3D();
+			this.viewTransform = new Matrix3D();
+			this.screenTransform = new Matrix3D();
+			
 			_dirty = true;
 		}
-		
-		private var _f :Vector3D = new Vector3D();
-		private var _s :Vector3D = new Vector3D();
-		private var _u :Vector3D = new Vector3D();
 		
 		/**
-		 * 
+		 * Rotates the transform so the forward vector points at /target/'s current position.
+		 * <p>Then it rotates the transform to point its up direction vector in the direction hinted at by the 
+		 * worldUp vector. If you leave out the worldUp parameter, the function will use the world y axis. 
+		 * worldUp is only a hint vector. The up vector of the rotation will only match the worldUp vector if 
+		 * the forward direction is perpendicular to worldUp</p>
 		 */ 
-		public function lookAt(target:Transform3D, up:Vector3D=null):void
+		public function lookAt(target:Transform3D, worldUp:Vector3D=null):void
 		{
-			_f.x = target.position.x - _position.x;
-			_f.y = target.position.y - _position.y;
-			_f.z = target.position.z - _position.z;
-			_f.normalize();
-			
-			up = up || DEFAULT_LOOKAT_UP;
-			
-			_s.x = (up.y * _f.z) - (up.z * _f.y);
-			_s.y = (up.z * _f.x) - (up.x * _f.z);
-			_s.z = (up.x * _f.y) - (up.y * _f.x);
-			_s.normalize();
-			
-			_u.x = (_s.y * _f.z) - (_s.z * _f.y);
-			_u.y = (_s.z * _f.x) - (_s.x * _f.z);
-			_u.z = (_s.x * _f.y) - (_s.y * _f.x);
-			_u.normalize();
-			
-			var v :Vector.<Number> = Vector.<Number>([
-				_s.x, _s.y, _s.z, 0,
-				_u.x, _u.y, _u.z, 0,
-				-_f.x, -_f.y, -_f.z, 0,
-				0, 0, 0, 1
-			]);
-			
-			_lookAt = _lookAt || new Matrix3D();
-			_lookAt.rawData = v;
-			
-			_dirty = true;
+			// actually, we only make note that a lookAt is scheduled.
+			// its up to some higher level class to deal with it.
+			scheduledLookAt = target;
+			scheduledLookAtUp = worldUp || DEFAULT_LOOKAT_UP;
 		}
-		
-		public var _lookAt :Matrix3D;
 		
 		/**
 		 * Applies a rotation of eulerAngles.x degrees around the x axis, eulerAngles.y degrees around 

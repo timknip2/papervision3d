@@ -3,7 +3,6 @@ package org.papervision3d.core.proto
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
-	import org.papervision3d.core.math.utils.MathUtil;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.objects.DisplayObject3D;
 	
@@ -15,25 +14,13 @@ package org.papervision3d.core.proto
 		public var name :String;
 		
 		/** */
-		public var worldTransform :Matrix3D;
-		
-		/** */
-		public var viewTransform :Matrix3D;
-		
-		/** */
-		public var screenTransform :Matrix3D;
+		public var parent :DisplayObjectContainer3D;
 		
 		/** */
 		public var transform :Transform3D;
 		
 		/** */
 		pv3d var _children :Vector.<DisplayObject3D>;
-		
-		/** */
-		pv3d var _lookAtUp :Vector3D;
-		
-		/** */
-		public var parent :DisplayObjectContainer3D;
 		
 		/** */
 		private static var _newID :int = 0;
@@ -46,9 +33,6 @@ package org.papervision3d.core.proto
 			this.name = name || "Object" + (_newID++);
 			
 			this.transform = new Transform3D();
-			this.worldTransform = new Matrix3D();
-			this.viewTransform = new Matrix3D();
-			this.screenTransform = new Matrix3D();
 			
 			_children = new Vector.<DisplayObject3D>();
 		}
@@ -151,6 +135,14 @@ package org.papervision3d.core.proto
 		}
 		
 		/**
+		 * 
+		 */
+		public function lookAt(object:DisplayObject3D, up:Vector3D=null):void
+		{
+			transform.lookAt(object.transform, up);
+		}
+		
+		/**
 		 * Removes a child.
 		 * 
 		 * @param	child	The child to remove.
@@ -199,16 +191,6 @@ package org.papervision3d.core.proto
 			{
 				return null;
 			}
-		}
-		
-		pv3d var _lookAtTarget :DisplayObject3D;
-		
-		/**
-		 * 
-		 */
-		public function lookAt(object:DisplayObject3D):void
-		{
-			_lookAtTarget = object;
 		}
 		
 		/**
