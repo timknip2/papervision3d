@@ -7,6 +7,8 @@ package {
 	import flash.events.Event;
 	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
 	
 	import net.hires.debug.Stats;
 	
@@ -21,6 +23,7 @@ package {
 	import org.papervision3d.core.render.pipeline.BasicPipeline;
 	import org.papervision3d.objects.DisplayObject3D;
 	import org.papervision3d.objects.primitives.Cube;
+	import org.papervision3d.objects.primitives.Plane;
 	import org.papervision3d.render.BasicRenderEngine;
 	import org.papervision3d.view.Viewport3D;
 
@@ -39,6 +42,7 @@ package {
 		public var scene :DisplayObject3D;
 		public var renderData :RenderData;
 		public var renderer :BasicRenderEngine;
+		public var tf :TextField;
 		
 		public function Main()
 		{
@@ -61,8 +65,21 @@ package {
 
 			addChild(new Stats());
 
-			camera = new Camera3D(20, 400, 2300, aspect, "Camera01");
+			tf = new TextField();
+			addChild(tf);
+			tf.x = 1;
+			tf.y = 110;
+			tf.width = 300;
+			tf.height = 200;
+			tf.defaultTextFormat = new TextFormat("Arial", 10, 0xff0000);
+			tf.selectable = false;
+			tf.multiline = true;
+			tf.text = "Papervision3D - version 3.0";
+			
+			camera = new Camera3D(50, 400, 2200, "Camera01");
 			pipeline = new BasicPipeline();
+			
+			camera.ortho = false;
 			
 			cube = new Cube("Cube");
 			
@@ -85,7 +102,14 @@ package {
 			scene.addChild( camera );
 			scene.addChild( cube );
 				
-			camera.z = 800;
+			camera.z = 600;
+			
+			var camera2 :Camera3D = new Camera3D(30, 1, 100, "Camera02");
+			cube.addChild(camera2);
+			camera2.x = -200;
+			
+			var plane :Plane = new Plane("Plane0", 1200, 1200, 1, 1);
+			scene.addChild( plane );
 			
 			renderData = new RenderData();
 			renderData.camera = camera;
@@ -96,6 +120,7 @@ package {
 			
 			addChild(renderData.viewport);
 			
+		//	cube.scaleX = cube.scaleY = cube.scaleZ = 5;
 		//	render();
 			
 			var clipper:SutherlandHodgmanClipper;
@@ -123,9 +148,9 @@ package {
 			cube.getChildByName("red").rotationX += 3;
 		//	cube.getChildByName("green").rotateAround(_r++, Vector3D.X_AXIS);
 			
-			camera.x = Math.sin(_r) * 950;
+			camera.x = Math.sin(_r) * 600;
 			camera.y = 500;
-			camera.z = Math.cos(_r) * 950;
+			camera.z = Math.cos(_r) * 600;
 			_r += Math.PI / 180;
 			
 			camera.lookAt(cube);
@@ -137,6 +162,11 @@ package {
 			renderData.viewport.containerSprite.graphics.clear();	
 			
 			draw(renderData.viewport.containerSprite.graphics, scene);
+			
+			tf.text = "Papervision3D - version 3.0" +
+				"\ntotal triangles: " + renderer.totalTriangles +
+				"\nculled triangles: " + renderer.culledTriangles +
+				"\nclipped triangles: " + renderer.clippedTriangles;
 		}
 		
 		private function draw(g:Graphics, object:DisplayObject3D):void
@@ -171,29 +201,12 @@ package {
 				
 				for each (var drawable :TriangleDrawable in renderer.renderList.drawables)
 				{
-				//for each (triangle in geometry.triangles)
-				//{
-				//	if (!triangle.visible) continue;
-				/*	
-					var x0 :Number = geometry.screenVertexData[triangle.v0.screenIndexX];
-					var y0 :Number = geometry.screenVertexData[triangle.v0.screenIndexY];
-					var x1 :Number = geometry.screenVertexData[triangle.v1.screenIndexX];
-					var y1 :Number = geometry.screenVertexData[triangle.v1.screenIndexY];
-					var x2 :Number = geometry.screenVertexData[triangle.v2.screenIndexX];
-					var y2 :Number = geometry.screenVertexData[triangle.v2.screenIndexY];
-				*/
 					var x0 :Number = drawable.x0;	
 					var y0 :Number = drawable.y0;	
 					var x1 :Number = drawable.x1;	
 					var y1 :Number = drawable.y1;	
 					var x2 :Number = drawable.x2;	
 					var y2 :Number = drawable.y2;	
-					
-					// Simple backface culling.
-					if ((x2 - x0) * (y1 - y0) - (y2 - y0) * (x1 - x0) > 0)
-					{
-						continue;
-					}
 					
 					// Our projection matrix moves vertices into the range [-1,-1,-1] to [1,1,1]
 					// so we need to scale up to match the viewport.
@@ -208,7 +221,7 @@ package {
 					color = drawable.material < 0 ? 0xff0000 : colors[drawable.material];
 					// Simple draw
 					g.lineStyle(0, color);
-				//	g.beginFill(color, 0.5);
+				//	g.beginFill(color, 0.3);
 					g.moveTo(x0, y0);
 					g.lineTo(x1, y1);
 					g.lineTo(x2, y2);
