@@ -1,5 +1,6 @@
 package org.papervision3d.render
 {
+	import flash.errors.IllegalOperationError;
 	import flash.geom.Utils3D;
 	import flash.geom.Vector3D;
 	
@@ -183,6 +184,8 @@ package org.papervision3d.render
 						drawable.y2 = v2.y;
 		
 						renderList.addDrawable(drawable);
+						
+						triangle.drawable = drawable;
 					}
 					else
 					{
@@ -324,6 +327,28 @@ package org.papervision3d.render
 			if ( plane.distance(v1) < 0 ) flags |= 2;
 			if ( plane.distance(v2) < 0 ) flags |= 4;
 			return flags;
+		}
+		
+		/**
+		 * Clip flags.
+		 * 
+		 * @see org.papervision3d.core.render.clipping.ClipFlags
+		 */
+		public function get clipFlags():int
+		{
+			return _clipFlags;
+		}
+		
+		public function set clipFlags(value:int):void
+		{
+			if (value >= 0 && value <= ClipFlags.ALL)
+			{
+				_clipFlags = value;
+			}
+			else
+			{
+				throw new IllegalOperationError("clipFlags should be a value between 0 and " + ClipFlags.ALL + "\nsee org.papervision3d.core.render.clipping.ClipFlags");
+			}
 		}
 		
 		/**

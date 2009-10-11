@@ -79,9 +79,9 @@ package org.papervision3d.cameras
 					
 					projectionMatrix = MatrixUtil.createProjectionMatrix(_fov, _aspectRatio, _near, _far);
 				}
+				
+				frustum.extractPlanes(projectionMatrix, frustum.viewClippingPlanes);
 			}
-			
-			frustum.extractPlanes(projectionMatrix, frustum.viewClippingPlanes);
 		}
 		
 		/**

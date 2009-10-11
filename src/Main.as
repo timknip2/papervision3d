@@ -17,6 +17,7 @@ package {
 	import org.papervision3d.core.geom.provider.TriangleGeometry;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
 	import org.papervision3d.core.ns.pv3d;
+	import org.papervision3d.core.render.clipping.ClipFlags;
 	import org.papervision3d.core.render.clipping.SutherlandHodgmanClipper;
 	import org.papervision3d.core.render.data.RenderData;
 	import org.papervision3d.core.render.draw.items.TriangleDrawable;
@@ -76,7 +77,7 @@ package {
 			tf.multiline = true;
 			tf.text = "Papervision3D - version 3.0";
 			
-			camera = new Camera3D(50, 400, 2200, "Camera01");
+			camera = new Camera3D(50, 600, 1200, "Camera01");
 			pipeline = new BasicPipeline();
 			
 			camera.ortho = false;
@@ -117,6 +118,7 @@ package {
 			renderData.viewport = new Viewport3D(0, 0, true);
 			
 			renderer = new BasicRenderEngine();
+			//renderer.clipFlags = ClipFlags.NEAR | ClipFlags.FAR;
 			
 			addChild(renderData.viewport);
 			
@@ -148,10 +150,10 @@ package {
 			cube.getChildByName("red").rotationX += 3;
 		//	cube.getChildByName("green").rotateAround(_r++, Vector3D.X_AXIS);
 			
-			camera.x = Math.sin(_r) * 600;
+			camera.x = Math.sin(_r) * 900;
 			camera.y = 500;
-			camera.z = Math.cos(_r) * 600;
-			_r += Math.PI / 180;
+			camera.z = Math.cos(_r) * 900;
+			_r += Math.PI / 90;
 			
 			camera.lookAt(cube);
 			//camera.lookAt( cube.getChildByName("blue") );
@@ -220,13 +222,14 @@ package {
 					
 					color = drawable.material < 0 ? 0xff0000 : colors[drawable.material];
 					// Simple draw
-					g.lineStyle(0, color);
-				//	g.beginFill(color, 0.3);
+				//	g.lineStyle(0, color);
+					g.beginFill(color, 0.3);
+					g.lineStyle(0, 0xffffff, 1);
 					g.moveTo(x0, y0);
 					g.lineTo(x1, y1);
 					g.lineTo(x2, y2);
 					g.lineTo(x0, y0);
-				//	g.endFill();
+					g.endFill();
 				}
 			}
 			
