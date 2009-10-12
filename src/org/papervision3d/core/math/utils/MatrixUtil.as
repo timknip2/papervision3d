@@ -87,5 +87,100 @@ package org.papervision3d.core.math.utils
 			return new Matrix3D(v);
 		}
 
+		public static function __gluMakeIdentityd(m : Vector.<Number>) :void {
+			m[0+4*0] = 1; m[0+4*1] = 0; m[0+4*2] = 0; m[0+4*3] = 0;
+		    m[1+4*0] = 0; m[1+4*1] = 1; m[1+4*2] = 0; m[1+4*3] = 0;
+		    m[2+4*0] = 0; m[2+4*1] = 0; m[2+4*2] = 1; m[2+4*3] = 0;
+		    m[3+4*0] = 0; m[3+4*1] = 0; m[3+4*2] = 0; m[3+4*3] = 1;
+		}
+		
+		public static function __gluMultMatricesd(a:Vector.<Number>, b:Vector.<Number>, r:Vector.<Number>):void {
+			var i :int, j :int;
+		    for (i = 0; i < 4; i++) {
+				for (j = 0; j < 4; j++) {
+				    r[int(i*4+j)] = 
+					a[int(i*4+0)]*b[int(0*4+j)] +
+					a[int(i*4+1)]*b[int(1*4+j)] +
+					a[int(i*4+2)]*b[int(2*4+j)] +
+					a[int(i*4+3)]*b[int(3*4+j)];
+				}
+		    }
+		}
+		
+		public static function __gluMultMatrixVecd(matrix : Vector.<Number>, a : Vector.<Number> , out : Vector.<Number>) : void {
+    		var i :int;
+		    for (i=0; i<4; i++) {
+				out[i] = 
+				    a[0] * matrix[int(0*4+i)] +
+				    a[1] * matrix[int(1*4+i)] +
+				    a[2] * matrix[int(2*4+i)] +
+				    a[3] * matrix[int(3*4+i)];
+		    }
+		}
+		
+		public static function __gluInvertMatrixd(src : Vector.<Number>, inverse : Vector.<Number>):Boolean {
+			var i :int, j :int, k :int, swap :int;
+		    var t :Number;
+		   	var temp :Vector.<Vector.<Number>> = new Vector.<Vector.<Number>>(4);
+
+		    for (i=0; i<4; i++) {
+		    	temp[i] = new Vector.<Number>(4, true);
+				for (j=0; j<4; j++) {
+				    temp[i][j] = src[i*4+j];
+				}
+		    }
+		    __gluMakeIdentityd(inverse);
+		
+		    for (i = 0; i < 4; i++) {
+				/*
+				** Look for largest element in column
+				*/
+				swap = i;
+				for (j = i + 1; j < 4; j++) {
+				    if (Math.abs(temp[j][i]) > Math.abs(temp[i][i])) {
+						swap = j;
+				    }
+				}
+			
+				if (swap != i) {
+				    /*
+				    ** Swap rows.
+				    */
+				    for (k = 0; k < 4; k++) {
+						t = temp[i][k];
+						temp[i][k] = temp[swap][k];
+						temp[swap][k] = t;
+				
+						t = inverse[i*4+k];
+						inverse[i*4+k] = inverse[swap*4+k];
+						inverse[swap*4+k] = t;
+				    }
+				}
+			
+				if (temp[i][i] == 0) {
+				    /*
+				    ** No non-zero pivot.  The matrix is singular, which shouldn't
+				    ** happen.  This means the user gave us a bad matrix.
+				    */
+				    return false;
+				}
+			
+				t = temp[i][i];
+				for (k = 0; k < 4; k++) {
+				    temp[i][k] /= t;
+				    inverse[i*4+k] /= t;
+				}
+				for (j = 0; j < 4; j++) {
+				    if (j != i) {
+						t = temp[j][i];
+						for (k = 0; k < 4; k++) {
+						    temp[j][k] -= temp[i][k]*t;
+						    inverse[j*4+k] -= inverse[i*4+k]*t;
+						}
+				    }
+				}
+		    }
+		    return true;			
+		}
 	}
 }

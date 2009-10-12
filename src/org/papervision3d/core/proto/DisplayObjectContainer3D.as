@@ -1,8 +1,8 @@
 package org.papervision3d.core.proto
 {
-	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	
+	import org.papervision3d.core.math.BoundingSphere3D;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.objects.DisplayObject3D;
 	
@@ -15,6 +15,12 @@ package org.papervision3d.core.proto
 		
 		/** */
 		public var parent :DisplayObjectContainer3D;
+		
+		/** */
+		public var boundingSphere :BoundingSphere3D;
+		
+		/** */
+		public var cullingState :int;
 		
 		/** */
 		public var transform :Transform3D;
@@ -32,7 +38,7 @@ package org.papervision3d.core.proto
 		{
 			this.name = name || "Object" + (_newID++);
 			
-			this.transform = new Transform3D();
+			this.transform = new Transform3D(this);
 			
 			_children = new Vector.<DisplayObject3D>();
 		}

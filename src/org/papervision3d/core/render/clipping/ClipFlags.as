@@ -2,6 +2,7 @@ package org.papervision3d.core.render.clipping
 {
 	public class ClipFlags
 	{
+		public static const NONE 	:int = 0;
 		public static const NEAR 	:int = 1;
 		public static const FAR 	:int = 2;
 		public static const LEFT 	:int = 4;

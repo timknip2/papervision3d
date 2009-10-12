@@ -5,6 +5,7 @@ package {
 	import flash.display.StageQuality;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
 	import flash.text.TextField;
@@ -77,16 +78,17 @@ package {
 			tf.multiline = true;
 			tf.text = "Papervision3D - version 3.0";
 			
-			camera = new Camera3D(50, 600, 1200, "Camera01");
+			camera = new Camera3D(50, 500, 4200, "Camera01");
 			pipeline = new BasicPipeline();
 			
 			camera.ortho = false;
+			camera.enableCulling = true;
 			
 			cube = new Cube("Cube");
 			
 			var cubeChild0 :Cube = new Cube("red");
 			cube.addChild( cubeChild0 );
-			cubeChild0.x = 300;
+			cubeChild0.x = 800;
 			//cubeChild0.z = -500;
 			
 			var cubeChild1 :Cube = new Cube("blue");
@@ -103,11 +105,11 @@ package {
 			scene.addChild( camera );
 			scene.addChild( cube );
 				
-			camera.z = 600;
+		//	camera.z = 600;
 			
 			var camera2 :Camera3D = new Camera3D(30, 1, 100, "Camera02");
-			cube.addChild(camera2);
-			camera2.x = -200;
+		//	cube.addChild(camera2);
+		//	camera2.x = -200;
 			
 			var plane :Plane = new Plane("Plane0", 1200, 1200, 1, 1);
 			scene.addChild( plane );
@@ -118,26 +120,37 @@ package {
 			renderData.viewport = new Viewport3D(0, 0, true);
 			
 			renderer = new BasicRenderEngine();
-			//renderer.clipFlags = ClipFlags.NEAR | ClipFlags.FAR;
+			renderer.clipFlags = ClipFlags.NONE;
 			
 			addChild(renderData.viewport);
 			
+			camera.x = 100;
+			camera.y = 500;
+			camera.z = 1000;
+			
+			render();
+			camera.lookAt(cube);
+			render();
+			camera.lookAt(cube);
+			render();
 		//	cube.scaleX = cube.scaleY = cube.scaleZ = 5;
 		//	render();
 			
 			var clipper:SutherlandHodgmanClipper;
 			
 			addEventListener(Event.ENTER_FRAME, render);
+			
+			stage.addEventListener(KeyboardEvent.KEY_UP, keyUpHandler);
 		}
 		
-		private var _r :Number = 0;
+		private var _r :Number = Math.PI / 4;
 		private var _s :Number = 0;
 		
 		private function render(event:Event=null):void
 		{
 			// rotation in global frame of reference : append
-		//	cube.x ++;
-		//	cube.rotationY--;
+		///	cube.x ++;
+			cube.rotationY--;
 			
 			//cube.getChildByName("blue").x += 0.1;
 			//cube.getChildByName("blue").rotationZ--;
@@ -147,13 +160,13 @@ package {
 			
 			cube.getChildByName("red").rotateAround(_s++, new Vector3D(0, 0, _s));
 		//	cube.getChildByName("red").scaleX = 2;
-			cube.getChildByName("red").rotationX += 3;
+		//	cube.getChildByName("red").rotationX += 3;
 		//	cube.getChildByName("green").rotateAround(_r++, Vector3D.X_AXIS);
 			
-			camera.x = Math.sin(_r) * 900;
+			camera.x = Math.sin(_r) * 1000;
 			camera.y = 500;
-			camera.z = Math.cos(_r) * 900;
-			_r += Math.PI / 90;
+			camera.z = Math.cos(_r) * 1000;
+			_r += Math.PI / 180;
 			
 			camera.lookAt(cube);
 			//camera.lookAt( cube.getChildByName("blue") );
@@ -165,7 +178,8 @@ package {
 			
 			draw(renderData.viewport.containerSprite.graphics, scene);
 			
-			tf.text = "Papervision3D - version 3.0" +
+			tf.text = "Papervision3D - version 3.0\n" +
+				"\nculled objects: " + BasicPipeline(renderer.pipeline).culledObjects +
 				"\ntotal triangles: " + renderer.totalTriangles +
 				"\nculled triangles: " + renderer.culledTriangles +
 				"\nclipped triangles: " + renderer.clippedTriangles;
@@ -213,6 +227,7 @@ package {
 					// Our projection matrix moves vertices into the range [-1,-1,-1] to [1,1,1]
 					// so we need to scale up to match the viewport.
 					// @see Camera3D, MatrixUtils and SimplePipeline
+					
 					x0 *= hw;
 					y0 *= -hh;
 					x1 *= hw;
@@ -236,6 +251,18 @@ package {
 			for each (child in object._children)
 			{
 				draw(g, child);
+			}
+		}
+		
+		private function keyUpHandler(event:KeyboardEvent):void
+		{
+			if( hasEventListener(Event.ENTER_FRAME) )
+			{
+				removeEventListener(Event.ENTER_FRAME, render);
+			}
+			else
+			{
+				addEventListener(Event.ENTER_FRAME, render);
 			}
 		}
 	}

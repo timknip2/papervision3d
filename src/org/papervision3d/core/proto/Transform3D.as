@@ -29,6 +29,15 @@ package org.papervision3d.core.proto
 		/** */
 		public var screenTransform :Matrix3D;
 		
+		/** The X axis of the transform in world space */
+		public var right :Vector3D;
+		
+		/** The Y axis of the transform in world space */
+		public var up :Vector3D;
+		
+		/** The Z axis of the transform in world space */
+		public var forward :Vector3D;
+		
 		/** */
 		pv3d var scheduledLookAt :Transform3D;
 		
@@ -50,15 +59,6 @@ package org.papervision3d.core.proto
 		/** The rotation as Euler angles in degrees relative to the parent transform's rotation. */
 		private var _localEulerAngles :Vector3D;
 		
-		/** The X axis of the transform in world space */
-		private var _right :Vector3D;
-		
-		/** The Y axis of the transform in world space */
-		private var _up :Vector3D;
-		
-		/** The Z axis of the transform in world space */
-		private var _forward :Vector3D;
-		
 		/** The rotation of the transform in world space stored as a Quaternion. */
 		private var _rotation :Quaternion;
 		
@@ -73,29 +73,33 @@ package org.papervision3d.core.proto
 		
 		private var _dirty :Boolean;
 		
+		private var _do3d :DisplayObjectContainer3D;
+		
 		/**
 		 * 
 		 */ 
-		public function Transform3D()
+		public function Transform3D(do3d:DisplayObjectContainer3D)
 		{
+			_do3d = do3d;
 			_position = new Vector3D();
 			_localPosition = new Vector3D();
 			_eulerAngles = new Vector3D();
 			_localEulerAngles = new Vector3D();
-			_right = new Vector3D();
-			_up = new Vector3D();
-			_forward = new Vector3D();
 			_rotation = new Quaternion();
 			_localRotation = new Quaternion();
 			_localScale = new Vector3D(1, 1, 1);
 			_transform = new Matrix3D();
 			_localTransform = new Matrix3D();
 			
+			this.right = new Vector3D();
+			this.up = new Vector3D();
+			this.forward = new Vector3D();
+			
 			this.worldTransform = new Matrix3D();
 			this.viewTransform = new Matrix3D();
 			this.screenTransform = new Matrix3D();
 			
-			_dirty = true;
+			_dirty = false;
 		}
 		
 		/**
@@ -195,8 +199,9 @@ package org.papervision3d.core.proto
 		 */ 
 		public function get localToWorldMatrix():Matrix3D
 		{
-			if (_dirty)
+			if (_dirty && !scheduledLookAt)
 			{
+				
 				rotate( _localEulerAngles, true );
 				
 				_transform.rawData = _localRotation.matrix.rawData;
@@ -206,10 +211,16 @@ package org.papervision3d.core.proto
 				_transform.append( _rotation.matrix );
 				
 				_transform.prependScale(_localScale.x, _localScale.y, _localScale.z);
-				_dirty = false;
-
-			}		
-			
+	
+				_transform.append( _rotation.matrix );
+				
+			}
+			if( scheduledLookAt )
+			{		
+				_transform.rawData = _localRotation.matrix.rawData;
+				_transform.appendTranslation( _localPosition.x, _localPosition.y, _localPosition.z);
+			}
+			_dirty = false;
 			return _transform;
 		}
 		
@@ -224,7 +235,7 @@ package org.papervision3d.core.proto
 		public function set position(value:Vector3D):void
 		{
 			_position = value;
-			_dirty = true;
+		//	_dirty = true;
 		}
 		
 		/**
@@ -238,7 +249,7 @@ package org.papervision3d.core.proto
 		public function set localPosition(value:Vector3D):void
 		{
 			_localPosition = value;
-			_dirty = true;
+		//	_dirty = true;
 		}
 		
 		/**

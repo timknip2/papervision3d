@@ -48,7 +48,7 @@ package org.papervision3d.render
 			renderList = new DrawableList();
 			clipper = new SutherlandHodgmanClipper();
 			
-			_clipFlags = ClipFlags.ALL;
+			_clipFlags = ClipFlags.NEAR;
 		}
 		
 		override public function renderScene(renderData:RenderData):void
@@ -58,7 +58,6 @@ package org.papervision3d.render
 
 			this.viewport = renderData.viewport;
 			
-			camera.rotationX = camera.rotationX;
 			camera.update(renderData.viewport.sizeRectangle);
 						
 			pipeline.execute(renderData);
@@ -87,7 +86,7 @@ package org.papervision3d.render
 			var v1 :Vector3D = new Vector3D();
 			var v2 :Vector3D = new Vector3D();
 			
-			if (object is TriangleGeometry)
+			if (object.cullingState == 0 && object is TriangleGeometry)
 			{
 				var triangle :Triangle;
 				var inside :Boolean;

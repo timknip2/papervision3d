@@ -1,5 +1,7 @@
 package org.papervision3d.core.render.pipeline
 {
+	import __AS3__.vec.Vector;
+	
 	import flash.geom.Matrix3D;
 	import flash.geom.Rectangle;
 	import flash.geom.Utils3D;
@@ -7,6 +9,10 @@ package org.papervision3d.core.render.pipeline
 	
 	import org.papervision3d.cameras.Camera3D;
 	import org.papervision3d.core.geom.provider.VertexGeometry;
+	import org.papervision3d.core.math.BoundingSphere3D;
+	import org.papervision3d.core.math.Plane3D;
+	import org.papervision3d.core.math.Quaternion;
+	import org.papervision3d.core.math.utils.MathUtil;
 	import org.papervision3d.core.math.utils.MatrixUtil;
 	import org.papervision3d.core.ns.pv3d;
 	import org.papervision3d.core.proto.Transform3D;
@@ -19,7 +25,10 @@ package org.papervision3d.core.render.pipeline
 		
 		private var _scheduledLookAt :Vector.<DisplayObject3D>;
 		private var _lookAtMatrix :Matrix3D;
-		 
+		private var _invWorldMatrix :Matrix3D;
+		
+		public var culledObjects :int;
+		
 		/**
 		 * 
 		 */ 
@@ -27,6 +36,7 @@ package org.papervision3d.core.render.pipeline
 		{
 			_scheduledLookAt = new Vector.<DisplayObject3D>();
 			_lookAtMatrix = new Matrix3D();
+			_invWorldMatrix = new Matrix3D();
 		}
 		
 		/**
@@ -39,6 +49,8 @@ package org.papervision3d.core.render.pipeline
 			var rect :Rectangle = renderData.viewport.sizeRectangle;
 			
 			_scheduledLookAt.length = 0;
+			
+			culledObjects = 0;
 			
 			transformToWorld(scene);	
 			
@@ -68,10 +80,76 @@ package org.papervision3d.core.render.pipeline
 					
 				// create the lookAt matrix
 				MatrixUtil.createLookAtMatrix(eye, tgt, up, _lookAtMatrix);
-						
+				
+				_lookAtMatrix.appendTranslation(-eye.x, -eye.y, -eye.z);
+				
+				var q:Quaternion = Quaternion.createFromMatrix(_lookAtMatrix);
+				
+				// need to cancel out the parent transform
+				if (object.parent)
+				{
+					_invWorldMatrix.rawData = object.parent.transform.worldTransform.rawData;
+					_invWorldMatrix.invert();
+					
+					q.mult( Quaternion.createFromMatrix(_invWorldMatrix) );	
+				}
+				
+				//q.mult(object.transform.localRotation);
+				
+				object.transform.localRotation = q;
+			//	object.transform.localRotation.normalize();
+				object.transform.dirty = false;
+				
+				// clear
+				object.transform.scheduledLookAt = null;
+				
+				transformToWorld(object, object.parent as DisplayObject3D);
+			}
+		}
+		
+		/**
+		 * Processes all scheduled lookAt's.
+		 */ 
+		protected function handleLookAt2():void
+		{
+			while (_scheduledLookAt.length)
+			{
+				var object :DisplayObject3D = _scheduledLookAt.pop();
+				var transform :Transform3D = object.transform;
+				var eye :Vector3D = transform.position;
+				var tgt :Vector3D = transform.scheduledLookAt.position;
+				var up :Vector3D = transform.scheduledLookAtUp;
+					
+				// create the lookAt matrix
+				MatrixUtil.createLookAtMatrix(eye, tgt, up, _lookAtMatrix);
+				
 				// prepend it to the world matrix
 				object.transform.worldTransform.prepend(_lookAtMatrix);
+
+				// TODO: the lookAt does not persist, we need to feed the transform new eulers.
+			
+				// need to cancel out the parent transform
+				if (object.parent)
+				{
+					_invWorldMatrix.rawData = object.parent.transform.worldTransform.rawData;
+					_invWorldMatrix.invert();
+					object.transform.worldTransform.append(_invWorldMatrix);	
+				}
 				
+				var q :Quaternion = Quaternion.createFromMatrix(object.transform.worldTransform);
+				
+				object.transform.eulerAngles = q.toEuler();
+				object.transform.eulerAngles.x *= MathUtil.TO_DEGREES;
+				object.transform.eulerAngles.y *= MathUtil.TO_DEGREES;
+				object.transform.eulerAngles.z *= MathUtil.TO_DEGREES;
+				object.transform.dirty = true;
+				
+				object.transform.position = object.transform.worldTransform.transformVector(object.transform.localPosition);
+				
+				object.transform.forward.x = -object.transform.worldTransform.rawData[2];
+				object.transform.forward.y = -object.transform.worldTransform.rawData[6];
+				object.transform.forward.z = -object.transform.worldTransform.rawData[10];
+			
 				// clear
 				object.transform.scheduledLookAt = null;
 			}
@@ -90,15 +168,42 @@ package org.papervision3d.core.render.pipeline
 				_scheduledLookAt.push( object );
 			}
 
+			// setup world matrix
 			wt.rawData = object.transform.localToWorldMatrix.rawData;
-		
 			if (parent)
 			{
 				wt.append(parent.transform.worldTransform);	
 			}
 	
+			// setup world position
 			object.transform.position = wt.transformVector(object.transform.localPosition);
-		
+			
+			object.transform.forward.x = -wt.rawData[8];
+			object.transform.forward.y = -wt.rawData[9];
+			object.transform.forward.z = -wt.rawData[10];
+			
+			// bounding sphere
+			if (!object.boundingSphere)
+			{
+				object.boundingSphere = new BoundingSphere3D();
+				
+				if (object is VertexGeometry)
+				{
+					object.boundingSphere.setFromVertices( VertexGeometry(object).vertices );
+				}
+				else
+				{
+					object.boundingSphere.origin.x = object.x;
+					object.boundingSphere.origin.y = object.y;
+					object.boundingSphere.origin.z = object.z;
+				}
+			}
+			
+			// update bounding sphere
+			object.boundingSphere.worldOrigin = wt.transformVector(object.transform.localPosition);
+			object.boundingSphere.worldRadius = object.boundingSphere.radius * Math.max(object.scaleX, Math.max(object.scaleY, object.scaleZ));
+
+			// recurse
 			for each (child in object._children)
 			{
 				transformToWorld(child, object);
@@ -113,13 +218,38 @@ package org.papervision3d.core.render.pipeline
 			var child :DisplayObject3D;
 			var wt :Matrix3D = object.transform.worldTransform;
 			var vt :Matrix3D = object.transform.viewTransform;
+			var planes :Vector.<Plane3D> = camera.frustum.worldClippingPlanes;
+			var pos :Vector3D = object.transform.position; //object.boundingSphere.worldOrigin;
+			var radius :Number = object.boundingSphere.worldRadius;
+			var plane :Plane3D;
+		//	var mp :Matrix3D = vt.clone();
 			
-			vt.rawData = wt.rawData;
-			vt.append(camera.viewMatrix);
+		//	mp.append(camera.projectionMatrix);
 			
-			if (object is VertexGeometry)
+			object.cullingState = 0;
+
+			if (camera.enableCulling)
 			{
-				projectVertices(camera, object as VertexGeometry);
+				for each (plane in planes)
+				{
+					if (plane.distance(pos) < -radius)
+					{
+						object.cullingState = 1;
+						culledObjects++;
+						break;
+					}
+				}
+			}
+			
+			if (object.cullingState == 0)
+			{
+				vt.rawData = wt.rawData;
+				vt.append(camera.viewMatrix);
+				
+				if (object is VertexGeometry)
+				{
+					projectVertices(camera, object as VertexGeometry);
+				}
 			}
 			
 			for each (child in object._children)

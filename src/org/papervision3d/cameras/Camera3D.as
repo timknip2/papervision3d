@@ -26,6 +26,8 @@ package org.papervision3d.cameras
 		private var _ortho:Boolean;
 		private var _orthoScale:Number;
 		private var _aspectRatio :Number;
+		private var _enableCulling :Boolean;
+		private var _worldCullingMatrix :Matrix3D;
 		
 		/**
 		 * Constructor.
@@ -45,8 +47,10 @@ package org.papervision3d.cameras
 			_dirty = true;
 			_ortho = false;
 			_orthoScale = 1;
-
-			frustum = new Frustum3D();
+			_enableCulling = false;
+			_worldCullingMatrix = new Matrix3D();
+			
+			frustum = new Frustum3D(this);
 			viewMatrix = new Matrix3D();
 		}
 		
@@ -78,10 +82,49 @@ package org.papervision3d.cameras
 				{
 					
 					projectionMatrix = MatrixUtil.createProjectionMatrix(_fov, _aspectRatio, _near, _far);
+					
 				}
 				
+				// extract the view clipping planes
 				frustum.extractPlanes(projectionMatrix, frustum.viewClippingPlanes);
 			}
+			
+			// TODO: sniff whether our transform was dirty, no need to calc when can didn't move.
+			if (_enableCulling)
+			{
+				_worldCullingMatrix.rawData = viewMatrix.rawData;
+				_worldCullingMatrix.append(projectionMatrix);
+				
+				// TODO: why this is needed is weird. If we don't the culling / clipping planes don't
+				// seem to match. With this hack all ok... 
+				// Tim: Think its got to do with a discrepancy between GL viewport and
+				// our draw-container sitting at center stage. 
+				_worldCullingMatrix.prependScale(0.5, 0.5, 0.5);
+				
+				// extract the world clipping planes
+				frustum.extractPlanes(_worldCullingMatrix, frustum.worldClippingPlanes, false);
+			}
+		}
+		
+		/**
+		 * 
+		 */
+		public function get aspectRatio():Number
+		{
+			return _aspectRatio;
+		}  
+		
+		/**
+		 * 
+		 */
+		public function get enableCulling():Boolean
+		{
+			return _enableCulling;
+		} 
+		
+		public function set enableCulling(value:Boolean):void
+		{
+			_enableCulling = value;	
 		}
 		
 		/**

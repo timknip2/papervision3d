@@ -1,11 +1,16 @@
 package org.papervision3d.core.math
 {
 	import flash.geom.Matrix3D;
+	import flash.geom.Vector3D;
 	
-	import org.papervision3d.view.Viewport3D;
+	import org.papervision3d.cameras.Camera3D;
 	
 	public class Frustum3D
 	{
+		public static const WORLD_PLANES :uint = 0;
+		public static const VIEW_PLANES :uint = 1;
+		public static const SCREEN_PLANES :uint = 2;
+		
 		public static const NEAR :uint = 0;
 		public static const FAR :uint = 1;
 		public static const LEFT :uint = 2;
@@ -13,17 +18,23 @@ package org.papervision3d.core.math
 		public static const TOP :uint = 4;
 		public static const BOTTOM :uint = 5;
 		
+		public var camera :Camera3D;
 		public var screenClippingPlanes :Vector.<Plane3D>;
 		public var viewClippingPlanes :Vector.<Plane3D>;
+		public var worldClippingPlanes :Vector.<Plane3D>;
+		
+		public var worldBoundingSphere :BoundingSphere3D;
 		
 		/**
 		 * 
 		 */ 
-		public function Frustum3D()
+		public function Frustum3D(camera:Camera3D)
 		{
+			this.camera = camera;
+			this.worldBoundingSphere = new BoundingSphere3D();
 			initPlanes();
 		}
-
+		
 		/**
 		 * 
 		 */ 
@@ -33,11 +44,13 @@ package org.papervision3d.core.math
 			
 			this.screenClippingPlanes = new Vector.<Plane3D>(6, true);
 			this.viewClippingPlanes = new Vector.<Plane3D>(6, true);
+			this.worldClippingPlanes = new Vector.<Plane3D>(6, true);
 			
 			for (i = 0; i < 6;  i++)
 			{
 				this.screenClippingPlanes[i] = Plane3D.fromCoefficients(0, 0, 1, 0);
 				this.viewClippingPlanes[i] = Plane3D.fromCoefficients(0, 0, 1, 0);
+				this.worldClippingPlanes[i] = Plane3D.fromCoefficients(0, 0, 1, 0);
 			}	
 			
 			this.screenClippingPlanes[ NEAR ].setCoefficients(0, 0, -1, 1);
@@ -120,8 +133,6 @@ package org.papervision3d.core.math
 					planes[i].normal.negate();
 				}
 			}
-			
-			//trace(planes[NEAR]);
 		}
 	}
 }
